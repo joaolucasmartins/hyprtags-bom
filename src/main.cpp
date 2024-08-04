@@ -12,29 +12,29 @@
 
 #define WLR_USE_UNSTABLE
 
-#include <unistd.h>
-#include <vector>
-#include <unordered_map>
+#include <any>
 #include <format>
 #include <string>
-#include <any>
+#include <unistd.h>
+#include <unordered_map>
+#include <vector>
 
 #include <hyprland/src/includes.hpp>
 
 #include <hyprland/src/Compositor.hpp>
 
 #define private public
+#include <hyprland/src/desktop/DesktopTypes.hpp>
 #include <hyprland/src/desktop/Window.hpp>
 #include <hyprland/src/desktop/Workspace.hpp>
-#include <hyprland/src/render/Renderer.hpp>
 #include <hyprland/src/helpers/Monitor.hpp>
-#include <hyprland/src/desktop/DesktopTypes.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
+#include <hyprland/src/render/Renderer.hpp>
 #undef private
 
+#include "../include/TagsMonitor.hpp"
 #include "../include/globals.hpp"
 #include "../include/utils.hpp"
-#include "../include/TagsMonitor.hpp"
 
 #define GET_CURRENT_TAGMONITOR() g_tagsMonitors
 
@@ -42,15 +42,18 @@
 static TagsMonitor *g_tagsMonitors;
 
 // Do NOT change this function.
-APICALL EXPORT std::string PLUGIN_API_VERSION() {
+APICALL EXPORT std::string PLUGIN_API_VERSION()
+{
     return HYPRLAND_API_VERSION;
 }
 
-static void tagsWorkspace(const std::string& workspace) {
+static void tagsWorkspace(const std::string &workspace)
+{
     Debug::log(LOG, HYPRTAGS ": tags-workspace {}", workspace);
 
     uint16_t workspaceIdx = (uint16_t)std::stoi(workspace);
-    if (!TagsMonitor::isValidTag(workspaceIdx)) {
+    if (!TagsMonitor::isValidTag(workspaceIdx))
+    {
         Debug::log(ERR, HYPRTAGS ": tags-workspace {} is invalid", workspace);
         return;
     }
@@ -59,11 +62,13 @@ static void tagsWorkspace(const std::string& workspace) {
 }
 
 // TODO
-static void flipWorkspace(const std::string& workspace) {
+static void flipWorkspace(const std::string &workspace)
+{
     Debug::log(LOG, HYPRTAGS ": tags-workspace {}", workspace);
 
     uint16_t workspaceIdx = (uint16_t)std::stoi(workspace);
-    if (!TagsMonitor::isValidTag(workspaceIdx)) {
+    if (!TagsMonitor::isValidTag(workspaceIdx))
+    {
         Debug::log(ERR, HYPRTAGS ": tags-workspace {} is invalid", workspace);
         return;
     }
@@ -72,16 +77,19 @@ static void flipWorkspace(const std::string& workspace) {
     // TODO
 }
 
-static void tagsWorkspacealttab(const std::string& ignored) {
+static void tagsWorkspacealttab(const std::string &ignored)
+{
     Debug::log(LOG, HYPRTAGS ": tags-workspacealttab");
 
     GET_CURRENT_TAGMONITOR()->altTab();
 }
 
-static void tagsMovetoworkspacesilent(const std::string& workspace) {
+static void tagsMovetoworkspacesilent(const std::string &workspace)
+{
     Debug::log(LOG, HYPRTAGS ": tags-movetoworkspacesilent {}", workspace);
 
-    if (workspace.rfind("special:", 0) == 0) {
+    if (workspace.rfind("special:", 0) == 0)
+    {
         // special windows in special workspaces are not managed by us. Just need to make sure the window is not borrowed
         // by anyone before moving it.
         Debug::log(LOG, HYPRTAGS ": tags-movetoworkspacesilent {} is a special workspace", workspace);
@@ -91,7 +99,8 @@ static void tagsMovetoworkspacesilent(const std::string& workspace) {
     }
 
     uint16_t workspaceIdx = (uint16_t)std::stoi(workspace);
-    if (!TagsMonitor::isValidTag(workspaceIdx)) {
+    if (!TagsMonitor::isValidTag(workspaceIdx))
+    {
         Debug::log(ERR, HYPRTAGS ": tags-movetoworkspacesilent {} is invalid", workspace);
         return;
     }
@@ -99,11 +108,13 @@ static void tagsMovetoworkspacesilent(const std::string& workspace) {
     GET_CURRENT_TAGMONITOR()->moveCurrentWindowToTag(workspaceIdx);
 }
 
-static void tagsMovetoworkspace(const std::string& workspace) {
+static void tagsMovetoworkspace(const std::string &workspace)
+{
     Debug::log(LOG, HYPRTAGS ": tags-movetoworkspace {}", workspace);
 
     uint16_t workspaceIdx = (uint16_t)std::stoi(workspace);
-    if (!TagsMonitor::isValidTag(workspaceIdx)) {
+    if (!TagsMonitor::isValidTag(workspaceIdx))
+    {
         Debug::log(ERR, HYPRTAGS ": tags-movetoworkspace {} is invalid", workspace);
         return;
     }
@@ -113,11 +124,13 @@ static void tagsMovetoworkspace(const std::string& workspace) {
     tagMon->gotoTag(workspaceIdx);
 }
 
-static void tagsToggleworkspace(const std::string& workspace) {
+static void tagsToggleworkspace(const std::string &workspace)
+{
     Debug::log(LOG, HYPRTAGS ": tags-toggleworkspace {}", workspace);
 
     uint16_t workspaceIdx = (uint16_t)std::stoi(workspace);
-    if (!TagsMonitor::isValidTag(workspaceIdx)) {
+    if (!TagsMonitor::isValidTag(workspaceIdx))
+    {
         Debug::log(ERR, HYPRTAGS ": tags-workspace {} is invalid", workspace);
         return;
     }
@@ -130,28 +143,31 @@ static void tagsToggleworkspace(const std::string& workspace) {
  *
  * @param workspace The workspace that changed
  */
-static void onWorkspace(void* self, std::any data, HANDLE PHANDLE) {
+static void onWorkspace(void *self, std::any data, HANDLE PHANDLE)
+{
     const auto workspace = std::any_cast<PHLWORKSPACE>(data);
     // Debug::log(LOG, HYPRTAGS ": onWorkspace {}", workspace->m_szName);
     HyprlandAPI::addNotification(PHANDLE, "Here", CColor{0.2, 1.0, 0.2, 1.0}, 5000);
 
     // if the workspace is special, do nothing (we don't manage special workspaces)
-    if (workspace->m_bIsSpecialWorkspace) {
+    if (workspace->m_bIsSpecialWorkspace)
+    {
         return;
     }
 
-    auto     tagMon       = GET_CURRENT_TAGMONITOR();
+    auto tagMon = GET_CURRENT_TAGMONITOR();
     uint16_t workspaceIdx = (uint16_t)std::stoi(workspace->m_szName);
     // if the workspace is the current one, it means we were the ones that triggered the change, so do nothing
-    if (tagMon->isOnlyTag(workspaceIdx)) {
+    if (tagMon->isOnlyTag(workspaceIdx))
+    {
         return;
     }
 
     tagMon->gotoTag(workspaceIdx);
 }
 
-
-static void onCloseWindow(void* self, std::any data, HANDLE PHANDLE) {
+static void onCloseWindow(void *self, std::any data, HANDLE PHANDLE)
+{
     // HyprlandAPI::addNotification(PHANDLE, HYPRTAGS ": Initialized successfully?!", CColor{0.2, 1.0, 0.2, 1.0}, 5000);
     // data is guaranteed
     const auto PWINDOW = std::any_cast<PHLWINDOW>(data);
@@ -161,13 +177,14 @@ static void onCloseWindow(void* self, std::any data, HANDLE PHANDLE) {
     GET_CURRENT_TAGMONITOR()->unregisterWindow(PWINDOW.get());
 }
 
-
-APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
+APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle)
+{
     PHANDLE = handle;
 
     const std::string HASH = __hyprland_api_get_hash();
 
-    if (HASH != GIT_COMMIT_HASH) {
+    if (HASH != GIT_COMMIT_HASH)
+    {
         HyprlandAPI::addNotification(PHANDLE, HYPRTAGS ": Failure in initialization: Version mismatch (headers ver is not equal to running Hyprland ver)",
                                      CColor{1.0, 0.2, 0.2, 1.0}, 5000);
         throw std::runtime_error("[hww] Version mismatch. HASH=" + HASH + ", GIT_COMMIT_HASH=" + GIT_COMMIT_HASH);
@@ -182,11 +199,13 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     // so keybinds work and the errors disappear
     HyprlandAPI::reloadConfig();
 
-    static auto P1 = HyprlandAPI::registerCallbackDynamic(PHANDLE, "workspace", [&](void* self, SCallbackInfo& info, std::any data) { onWorkspace(self, data, PHANDLE); });
-    static auto P2 = HyprlandAPI::registerCallbackDynamic(PHANDLE, "closeWindow", [&](void* self, SCallbackInfo& info, std::any data) { onCloseWindow(self, data, PHANDLE); });
+    static auto P1 = HyprlandAPI::registerCallbackDynamic(PHANDLE, "workspace", [&](void *self, SCallbackInfo &info, std::any data)
+                                                          { onWorkspace(self, data, PHANDLE); });
+    static auto P2 = HyprlandAPI::registerCallbackDynamic(PHANDLE, "closeWindow", [&](void *self, SCallbackInfo &info, std::any data)
+                                                          { onCloseWindow(self, data, PHANDLE); });
 
     // At the start only the first tag is active
-    TagsMonitor* tagsMonitor    = new TagsMonitor();
+    TagsMonitor *tagsMonitor = new TagsMonitor();
     g_tagsMonitors = tagsMonitor;
     // focus main screen
     HyprlandAPI::invokeHyprctlCommand("dispatch", "workspace name:1");
@@ -195,7 +214,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     return {HYPRTAGS, "Hyprland version of DWM's tag system", "JoaoCostaIFG", "1.0"};
 }
 
-APICALL EXPORT void PLUGIN_EXIT() {
+APICALL EXPORT void PLUGIN_EXIT()
+{
     HyprlandAPI::addNotification(PHANDLE, HYPRTAGS ": Unloaded!", CColor{0.2, 1.0, 0.2, 1.0}, 5000);
 
     delete g_tagsMonitors; // clear();

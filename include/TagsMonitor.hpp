@@ -7,22 +7,26 @@
 
 #include "utils.hpp"
 
-class TagsMonitor {
-  public:
+class TagsMonitor
+{
+public:
     TagsMonitor();
 
-    uint16_t getTags() const {
+    uint16_t getTags() const
+    {
         return this->tags;
     }
 
-    uint16_t getHist() const {
+    uint16_t getHist() const
+    {
         return this->hist;
     }
 
-    void swapHist() {
+    void swapHist()
+    {
         const uint16_t tmp = this->tags;
-        this->tags         = this->hist;
-        this->hist         = tmp;
+        this->tags = this->hist;
+        this->hist = tmp;
     }
 
     void flipTag(uint16_t tag);
@@ -35,31 +39,31 @@ class TagsMonitor {
     void altTab();
 
     /* Returns true if the tag is the only tag active (current, no borrows) */
-    bool        isOnlyTag(uint16_t tag) const;
+    bool isOnlyTag(uint16_t tag) const;
 
-    void        unregisterWindow(CWindow* window);
+    void unregisterWindow(CWindow *window);
 
     /* garantees that the current window is not registered as borrowed by anyone.
      * This is useful when the window is moved to a special workspace
      */
-    void        unregisterCurrentWindow();
+    void unregisterCurrentWindow();
 
     static bool isValidTag(uint16_t tag);
 
-  private:
-    uint16_t                                                   tags;
-    uint16_t                                                   mainTag;
-    std::unordered_map<uint16_t, std::unordered_set<CWindow*>> borrowedTags; // tag -> set of WINDOWS
-    uint16_t                                                   hist;
-    uint16_t                                                   histMainTag;
+private:
+    uint16_t tags;
+    uint16_t mainTag;
+    std::unordered_map<uint16_t, std::unordered_set<CWindow *>> borrowedTags; // tag -> set of WINDOWS
+    uint16_t hist;
+    uint16_t histMainTag;
 
     /* Returns true if the tag was activated, false otherwise (was already activate) */
     bool activateTag(uint16_t tag);
 
     /* Returns true if the tag was deactivated, false otherwise (was not activate) */
-    bool        deactivateTag(uint16_t tag);
+    bool deactivateTag(uint16_t tag);
 
     std::string getWorkspaceName(uint16_t tag) const;
 };
 
-#endif //HYPRTAGS_TAGSMONITOR_H
+#endif // HYPRTAGS_TAGSMONITOR_H
