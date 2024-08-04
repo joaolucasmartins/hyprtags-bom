@@ -36,10 +36,10 @@
 #include "../include/utils.hpp"
 #include "../include/TagsMonitor.hpp"
 
-#define GET_CURRENT_TAGMONITOR() g_tagsMonitors[GET_CURRENT_MONITOR()->ID]
+#define GET_CURRENT_TAGMONITOR() g_tagsMonitors
 
 // Each monitor has a set of active tags: monitorID -> listOfTags
-static std::unordered_map<size_t, TagsMonitor*> g_tagsMonitors;
+static TagsMonitor *g_tagsMonitors;
 
 // Do NOT change this function.
 APICALL EXPORT std::string PLUGIN_API_VERSION() {
@@ -56,6 +56,20 @@ void tagsWorkspace(const std::string& workspace) {
     }
 
     GET_CURRENT_TAGMONITOR()->gotoTag(workspaceIdx);
+}
+
+// TODO
+void flipWorkspace(const std::string& workspace) {
+    Debug::log(LOG, HYPRTAGS ": tags-workspace {}", workspace);
+
+    uint16_t workspaceIdx = (uint16_t)std::stoi(workspace);
+    if (!TagsMonitor::isValidTag(workspaceIdx)) {
+        Debug::log(ERR, HYPRTAGS ": tags-workspace {} is invalid", workspace);
+        return;
+    }
+
+    GET_CURRENT_TAGMONITOR()->flipTag(workspaceIdx);
+    // TODO
 }
 
 void tagsWorkspacealttab(const std::string& ignored) {
@@ -152,6 +166,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     }
 
     HyprlandAPI::addDispatcher(PHANDLE, "tags-workspace", tagsWorkspace);
+    HyprlandAPI::addDispatcher(PHANDLE, "tags-flipworkspace", flipWorkspace);
     HyprlandAPI::addDispatcher(PHANDLE, "tags-workspacealttab", tagsWorkspacealttab);
     HyprlandAPI::addDispatcher(PHANDLE, "tags-movetoworkspacesilent", tagsMovetoworkspacesilent);
     HyprlandAPI::addDispatcher(PHANDLE, "tags-movetoworkspace", tagsMovetoworkspace);
@@ -164,10 +179,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::registerCallbackDynamic(PHANDLE, "closeWindow", [&](void* self, SCallbackInfo& info, std::any data) { onCloseWindow(std::any_cast<CWindow*>(data)); });
 
     // At the start only the first tag is active
-    for (auto& monitor : g_pCompositor->m_vMonitors) {
-        TagsMonitor* tagsMonitor    = new TagsMonitor(monitor->ID);
-        g_tagsMonitors[monitor->ID] = tagsMonitor;
-    }
+    TagsMonitor* tagsMonitor    = new TagsMonitor();
+    g_tagsMonitors = tagsMonitor;
     // focus main screen
     HyprlandAPI::invokeHyprctlCommand("dispatch", "workspace name:1");
 
@@ -178,5 +191,5 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 APICALL EXPORT void PLUGIN_EXIT() {
     HyprlandAPI::addNotification(PHANDLE, HYPRTAGS ": Unloaded!", CColor{0.2, 1.0, 0.2, 1.0}, 5000);
 
-    g_tagsMonitors.clear();
+    delete g_tagsMonitors; // clear();
 }

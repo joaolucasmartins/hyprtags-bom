@@ -9,7 +9,7 @@
 
 class TagsMonitor {
   public:
-    TagsMonitor(uint64_t monitorId);
+    TagsMonitor();
 
     uint16_t getTags() const {
         return this->tags;
@@ -25,6 +25,7 @@ class TagsMonitor {
         this->hist         = tmp;
     }
 
+    void flipTag(uint16_t tag);
     void gotoTag(uint16_t tag);
 
     bool toogleTag(uint16_t tag);
@@ -46,9 +47,6 @@ class TagsMonitor {
     static bool isValidTag(uint16_t tag);
 
   private:
-    uint64_t                                                   monitorId;
-    std::string                                                identifier;
-
     uint16_t                                                   tags;
     uint16_t                                                   mainTag;
     std::unordered_map<uint16_t, std::unordered_set<CWindow*>> borrowedTags; // tag -> set of WINDOWS
@@ -60,8 +58,6 @@ class TagsMonitor {
 
     /* Returns true if the tag was deactivated, false otherwise (was not activate) */
     bool        deactivateTag(uint16_t tag);
-
-    void        setMonitorIdentifier(uint64_t monitorId);
 
     std::string getWorkspaceName(uint16_t tag) const;
 };
